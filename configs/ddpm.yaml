@@ -1,0 +1,110 @@
+model:
+  base_learning_rate: 1.0e-05
+  ckpt_dir: /home/users/ntu/sehwan00/scratch/train_latent/ddpm/checkpoints
+  samples_dir: /home/users/ntu/sehwan00/scratch/train_latent/ddpm/samples 
+  epochs: 200 
+  # target: ldm.models.diffusion.ddpm.LatentDiffusion
+  target: ddpm.LatentDiffusion
+  params:
+    linear_start: 0.0015
+    linear_end: 0.0195
+    num_timesteps_cond: 1
+    log_every_t: 200
+    timesteps: 1000
+    first_stage_key: image
+    cond_stage_key: class_label
+    image_size: 32
+    channels: 48
+    cond_stage_trainable: True 
+    conditioning_key: crossattn
+    monitor: val/loss
+    use_ema: false
+    # ckpt_path: /home/users/ntu/sehwan00/scratch/train_latent/checkpoints/best.pth
+    unet_config:
+      target: core.ldm.modules.diffusionmodules.openaimodel.UNetModel
+      params:
+        image_size: 32
+        in_channels: 48
+        out_channels: 48
+        model_channels: 192
+        attention_resolutions:
+        - 8
+        - 4
+        - 2
+        num_res_blocks: 2
+        channel_mult:
+        - 1
+        - 2
+        - 3
+        - 5
+        num_heads: 1
+        use_spatial_transformer: true
+        transformer_depth: 1
+        context_dim: 512
+    
+    first_stage_config:
+      # target: ldm.models.autoencoder.VQModelInterface
+      target: vae.AutoencoderKL
+      ckpt_path: /home/users/ntu/sehwan00/scratch/train_latent/checkpoints/best.pth
+      params:
+        # embed_dim: 3
+        # n_embed: 8192
+        # ddconfig:
+        #   double_z: false
+        #   z_channels: 3
+        #   resolution: 256
+        #   in_channels: 3
+        #   out_ch: 3
+        #   ch: 128
+        #   ch_mult:
+        #   - 1
+        #   - 2
+        #   - 4
+        #   num_res_blocks: 2
+        #   attn_resolutions: []
+        #   dropout: 0.0
+        
+        embed_dim: 48 
+        ddconfig:
+          double_z: true
+          z_channels: 48
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult: [ 1, 2, 2, 4 ]
+          num_res_blocks: 2
+          attn_resolutions: [ 32, 16 ]
+          dropout: 0.0
+        # lossconfig:
+        #   target: torch.nn.Identity
+
+    cond_stage_config:
+      target: core.ldm.modules.encoders.modules.ClassEmbedder
+      params:
+        n_classes: 5
+        embed_dim: 512
+        key: class_label
+log_dir: /home/users/ntu/sehwan00/scratch/train_latent/ddpm/logs
+dataset:
+  train_dir: /home/users/ntu/sehwan00/scratch/pathology 
+  txt_dir: /home/users/ntu/sehwan00/scratch/pathology/list.txt
+  resolution: 256
+  batch_size: 6
+# data:
+#   target: main.DataModuleFromConfig
+#   params:
+#     batch_size: 2
+#     wrap: true
+#     train:
+#       # You must use your own dataset structure definition
+#       target: ldm.data.dataset_TXT.TXTImageDatasetTrain_6cls
+#       params:
+#         size: 256
+#         degradation: pil_nearest
+#     validation:
+#       # You must use your own dataset structure definition
+#       target: ldm.data.dataset_TXT.TXTImageDatasetTrain_6cls
+#       params:
+#         size: 256
+#         degradation: pil_nearest

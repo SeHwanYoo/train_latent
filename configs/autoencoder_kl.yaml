@@ -1,0 +1,32 @@
+model:
+  base_learning_rate: 0.0001
+  ckpt_dir: /home/users/ntu/sehwan00/scratch/train_latent/checkpoints
+  samples_dir: /home/users/ntu/sehwan00/scratch/train_latent/samples 
+  epochs: 200 
+  params:
+    # monitor: "val/rec_loss"
+    embed_dim: 48
+    lossconfig:
+      target: core.ldm.modules.losses.LPIPSWithDiscriminator
+      params:
+        disc_start: 12000
+        kl_weight: 0.00001
+        disc_weight: 0.5
+
+    ddconfig:
+      double_z: True
+      z_channels: 48
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [1,2,2,4]  # num_down = len(ch_mult)-1
+      num_res_blocks: 2
+      attn_resolutions: [32,16]
+      dropout: 0.0
+log_dir: /home/users/ntu/sehwan00/scratch/train_latent/logs
+dataset:
+  train_dir: /home/users/ntu/sehwan00/scratch/pathology 
+  txt_dir: /home/users/ntu/sehwan00/scratch/pathology/list.txt
+  resolution: 256
+  batch_size: 6
